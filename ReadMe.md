@@ -33,7 +33,7 @@ For the images that were taken to calibrate the camera we obtain the following:
 **Part 3**    
 Computation for finding the camera relative pose:
 * Few epipolar lines on the images.
-* The matrix R<sup>R</sup><sub>R</sub> and **r**<sup>R</sup>
+* The matrix R<sup>R</sup><sub>L</sub> and **r**<sup>R</sup>
 * Re-projected feature points on the first image
 
 **Part 4**   
