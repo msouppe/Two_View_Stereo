@@ -1,8 +1,8 @@
-import os
 import cv2 as cv
 import numpy as np
 import glob
 
+# Soure https://docs.opencv.org/3.1.0/dc/dbb/tutorial_py_calibration.html
 def camera_calibration():
 	# termination criteria
 	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)

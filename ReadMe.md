@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Python 3 
-- Python packages: OpenCV, numpy, matplotlib.pyplot, scipy, os, time
+- Python packages: cv2, numpy, os, glob
 - MAC OS or Windows 10 (Ubuntu Windows' Bash)
 
 ## Installation 
@@ -20,6 +20,8 @@ python3 main.py
 
 ## Project Structure
 * `main.py`: Main program
+* `calibration.py`: Calibrates camera using the chessboard images
+* `camera_pose`:
   
 ## Output
 **Part 1**  
