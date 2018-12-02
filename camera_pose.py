@@ -13,50 +13,28 @@ def undistort(image, img_name, mtx, dist):
 	print("height, width: ", h, w)
 	newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
 
-	print("newcameramtx:", newcameramtx)
-
 	# Undistort
-	dst = cv.undistortPoints(img, mtx, dist, None, newcameramtx)
-    
-    # Crop the image
-	# x,y,w,h = roi
-	# print(roi)
-	# dst = dst[y:y+h, x:x+w]
+	dst = cv.undistort(img, mtx, dist, None, newcameramtx)
+	# dst = cv.undistortPoints(img, mtx, dist, None, newcameramtx)
+
 	cv.imwrite(img_name, dst)
 
-	print('undistort complete!')
+	print('undistort() complete!')
 	return dst
 
 # Source: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_epipolar_geometry/py_epipolar_geometry.html
-# 2. Create “feature points” in each image:
-# 	sift = cv.xfeatures2d.SIFT_create()
-# 	sift.detectAndCompute()
-def create_feature_points(img1_, img2_, mtx, dist):
-
-	# img1 = undistort(img1_, 'myleft_undistort.jpg', mtx, dist)
-	# img2 = undistort(img2_, 'myright_undistort.jpg', mtx, dist)
-	
-	img1 = cv.imread(img1_, 0)
-	img2 = cv.imread(img2_, 0)
-
+# Create “feature points” in each image:
+def create_feature_points(img1, img2, mtx, dist):
 	sift = cv.xfeatures2d.SIFT_create()
-
-	print (img1.dtype)
-	print (img2.dtype)
 
 	# Find the keypoints and descriptors with SIFT
 	kp1, des1 = sift.detectAndCompute(img1, None)
 	kp2, des2 = sift.detectAndCompute(img2, None)
 
-	print('create_feature_points complete!')
 	return kp1, des1, kp2, des2
 
-# 3. Match the feature points across the two images:
-# 	cv.FlannBasedMatcher()
-# 	flann.knnMatch()
-def match_feature_points(img1_, img2_, mtx, dist):
-	kp1, des1, kp2, des2 = create_feature_points(img1_, img2_, mtx, dist)
-
+# Match the feature points across the two images:
+def match_feature_points(kp1, des1, kp2, des2):
 	FLANN_INDEX_KDTREE = 0
 	index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 	search_params = dict(checks=50)
@@ -75,6 +53,7 @@ def match_feature_points(img1_, img2_, mtx, dist):
 			pts2.append(kp2[m.trainIdx].pt)
 			pts1.append(kp1[m.queryIdx].pt)
 
+	# Compute the fundamental matrix F and find some epipolar lines
 	pts1 = np.int32(pts1)
 	pts2 = np.int32(pts2)
 	F, mask = cv.findFundamentalMat(pts1, pts2, cv.FM_LMEDS)
@@ -82,10 +61,10 @@ def match_feature_points(img1_, img2_, mtx, dist):
 	# We select only inlier points
 	pts1 = pts1[mask.ravel()==1]
 	pts2 = pts2[mask.ravel()==1]
-	print('inside match_feature_points()')
+
 	return pts1, pts2, F
 
-# # Draw epilines
+# Draw epilines
 def drawlines(img1,img2,lines,pts1,pts2):
     ''' img1 - image on which we draw the epilines for the points in img2
         lines - corresponding epilines '''
@@ -101,31 +80,55 @@ def drawlines(img1,img2,lines,pts1,pts2):
         img2 = cv.circle(img2,tuple(pt2),5,color,-1)
     return img1, img2
 
+def draw_image_epipolar_lines(img1, img2, pts1, pts2, F):
+	lines1 = cv.computeCorrespondEpilines(pts2.reshape(-1,1,2), 2, F)
+	lines1 = lines1.reshape(-1,3)
+	img5,img6 = drawlines(img1,img2,lines1,pts1,pts2)
 
+	lines2 = cv.computeCorrespondEpilines(pts1.reshape(-1,1,2), 1,F)
+	lines2 = lines2.reshape(-1,3)
+	img3,img4 = drawlines(img2,img1,lines2,pts2,pts1)
 
+	plt.subplot(121),plt.imshow(img5)
+	plt.subplot(122),plt.imshow(img3)
+	plt.show()
 
-# # 4. Compute the fundamental matrix F and find some epipolar lines (note: although this
-# # 	is not strictly necessary for our purpose, you still are expected to do it):
-# # 	findFundamentalMat()
-# # 	computeCorrespondEpilines()
+def relative_camera_pose(img1_, img2_, K, dist, undistort_=False):
 
-# # 5. Compute the essential matrix E:
-# # findEssentialMat()
+	if undistort_:
+		img1 = undistort(img1_, 'myleft_undistort.jpg', K, dist)
+		img2 = undistort(img2_, 'myright_undistort.jpg', K, dist)
+	else:
+		img1 = cv.imread(img1_, 0)
+		img2 = cv.imread(img2_, 0)
 
-# # 6. Decompose the essential matrix into R, r
-# # decomposeEssentialMat()
+	kp1, des1, kp2, des2 = create_feature_points(img1, img2, K, dist)
+	pts1, pts2, F = match_feature_points(kp1, des1, kp2, des2)
 
-# # 7. Calculate the depth of the matching points:
-# # triangulatePoints()
+	draw_image_epipolar_lines(img1, img2, pts1, pts2, F)
 
+	# Compute the essential matrix E
+	# Help: https://docs.opencv.org/3.4/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
+	E, _ = cv.findEssentialMat(pts1, pts2, K)
+	print("\nEssential Matrix, E:\n", E)
 
+	# Decompose the essential matrix into R, r
+	R1, R2, t = cv.decomposeEssentialMat(E)
+	print("\nRotation matrix left to right:\n", R1)
+	print("\nTranslation vector from right reference frame:\n", t)
 
+	# Re-projected feature points on the first image
+	# http://answers.opencv.org/question/173969/how-to-give-input-parameters-to-triangulatepoints-in-python/
+	x = np.array([0,0,0])
+	zero_vect = x.reshape(3,1)
+	P1 = np.append(R1, zero_vect, 1)
+	P2 = np.append(R2, t, 1)
+	print("End of relative_camera_pose()")
 
+	# Calculate the depth of the matching points:
+	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
+	# https://stackoverflow.com/questions/22334023/how-to-calculate-3d-object-points-from-2d-image-points-using-stereo-triangulatio/22335825
+	# points4D = cv.triangulatePoints(P1, np.transpose(pts1))
+	# triangulatePoints()
 
-
-
-
-
-# def relative_camera_pose(img1, img2):
-
-
+	return R1, R2, t
