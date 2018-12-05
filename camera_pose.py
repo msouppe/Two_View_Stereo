@@ -9,13 +9,7 @@ from matplotlib import pyplot as plt
 # undistortPoints()
 def undistort(image, img_name, mtx, dist):
 	img = cv.imread(image, 0)
-	h, w = img.shape[:2]
-	print("height, width: ", h, w)
-	newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-
-	# Undistort
-	dst = cv.undistort(img, mtx, dist, None, newcameramtx)
-	# dst = cv.undistortPoints(img, mtx, dist, None, newcameramtx)
+	dst = cv.undistort(img, mtx, dist, None, None)
 
 	cv.imwrite(img_name, dst)
 
@@ -121,9 +115,10 @@ def relative_camera_pose(img1_, img2_, K, dist, undistort_=False):
 	# http://answers.opencv.org/question/173969/how-to-give-input-parameters-to-triangulatepoints-in-python/
 	x = np.array([0,0,0])
 	zero_vect = x.reshape(3,1)
-	P1 = np.append(R1, zero_vect, 1)
-	P2 = np.append(R2, t, 1)
-	print("End of relative_camera_pose()")
+	# R1 t, R1 -t, R2 t, R2 -t = E, find positive depth (z)
+	P1 = K * np.append(I, zero_vect)
+	P2 = K * np.append(R2, t)
+	print("\nEnd of relative_camera_pose()")
 
 	# Calculate the depth of the matching points:
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/

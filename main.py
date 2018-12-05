@@ -45,13 +45,13 @@ scene_imgs = glob.glob(scene_path +'*.jpg')
 img1 = scene_path + "myleft.jpg"
 img2 = scene_path + "myright.jpg"
 
-R1, R2, t = cam.relative_camera_pose(img1, img2, K, dist)
+R1, R2, t = cam.relative_camera_pose(img1, img2, K, dist, undistort_=True)
 
 # Epipolar lines on the images
 
 # Matrix R_R_L and r_R
-print("\nRotation matrix left to right:\n", R1)
-print("\nTranslation vector from right reference frame:\n", t)
+#print("\nRotation matrix left to right:\n", R1)
+#print("\nTranslation vector from right reference frame:\n", t)
 
 # Re-projected feature points on the first image
 
