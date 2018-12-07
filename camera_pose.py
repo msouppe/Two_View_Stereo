@@ -108,22 +108,46 @@ def relative_camera_pose(img1_, img2_, K, dist, undistort_=False):
 
 	# Decompose the essential matrix into R, r
 	R1, R2, t = cv.decomposeEssentialMat(E)
-	print("\nRotation matrix left to right:\n", R1)
-	print("\nTranslation vector from right reference frame:\n", t)
+	#print("\nRotation matrix left to right:\n", R1)
+	#print("\nTranslation vector from right reference frame:\n", t)
 
 	# Re-projected feature points on the first image
 	# http://answers.opencv.org/question/173969/how-to-give-input-parameters-to-triangulatepoints-in-python/
-	x = np.array([0,0,0])
-	zero_vect = x.reshape(3,1)
-	# R1 t, R1 -t, R2 t, R2 -t = E, find positive depth (z)
-	P1 = K * np.append(I, zero_vect)
-	P2 = K * np.append(R2, t)
-	print("\nEnd of relative_camera_pose()")
+	print("R2:\n", R2)
+	print("t\n", t)
 
+	R2_t = np.hstack((R2,t))
+	print("R2_t:\n", R2_t)
+	
+
+	I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+	zero_vector = np.array([[0,0,0]])
+
+	zero_vector = np.transpose(zero_vector)
+	I_aug = np.hstack((I,zero_vector))
+	print(I_aug)
+
+
+
+	# Create projection matrices P1 and P2
+	P1 = np.dot(K,I_aug)
+	P2 = np.dot(K,R2_t)
+    
+	print("P1:\n", P1)
+	print("P2:\n", P2)
+
+
+
+	pts1 = np.transpose(pts1)
+	pts2 = np.transpose(pts2)
+
+	#points4D = cv.triangulatePoints(P1, P2, pts1, pts2)
+	
 	# Calculate the depth of the matching points:
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
 	# https://stackoverflow.com/questions/22334023/how-to-calculate-3d-object-points-from-2d-image-points-using-stereo-triangulatio/22335825
-	# points4D = cv.triangulatePoints(P1, np.transpose(pts1))
-	# triangulatePoints()
+	
+	
+	
 
 	return R1, R2, t

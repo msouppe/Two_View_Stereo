@@ -35,10 +35,10 @@ def camera_calibration():
 
 			# Draw and display the corners
 			cv.drawChessboardCorners(img, (9,6), corners, ret)
-			cv.imshow('img',img)
-			cv.waitKey(500)
+			#cv.imshow('img',img)
+			#cv.waitKey(500)
 
-	cv.destroyAllWindows()
+	#cv.destroyAllWindows()
 
 	ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 	mse = mean_sqaure_error(imgpoints, objpoints, rvecs, tvecs, mtx, dist)
