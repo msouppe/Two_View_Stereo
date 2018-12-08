@@ -42,7 +42,7 @@ def match_feature_points(kp1, des1, kp2, des2):
 
 	# ratio test as per Lowe's paper
 	for i,(m,n) in enumerate(matches):
-		if m.distance < 0.8*n.distance:
+		if m.distance < 0.4*n.distance:
 			good.append(m)
 			pts2.append(kp2[m.trainIdx].pt)
 			pts1.append(kp1[m.queryIdx].pt)
@@ -85,16 +85,25 @@ def draw_image_epipolar_lines(img1, img2, pts1, pts2, F):
 
 	plt.subplot(121),plt.imshow(img5)
 	plt.subplot(122),plt.imshow(img3)
+	plt.savefig('plot_epilines.png')
 	plt.show()
 
-def relative_camera_pose(img1_, img2_, K, dist, undistort_=False):
+def relative_camera_pose(img1_, img2_, K, dist):
 
-	if undistort_:
-		img1 = undistort(img1_, 'myleft_undistort.jpg', K, dist)
-		img2 = undistort(img2_, 'myright_undistort.jpg', K, dist)
-	else:
-		img1 = cv.imread(img1_, 0)
-		img2 = cv.imread(img2_, 0)
+	print("\n\nRelativeCamPose:\n")
+
+	#K = np.array([[883.64406339, 0., 507.1981339 ],[0., 884.98856976, 382.46811708],[0., 0., 1.]])
+	#dist = np.array([3.69641561e-02,  3.48490576e-01, -6.76000221e-04,  1.95258318e-04, -1.13082536e+00])
+
+	img1 = undistort(img1_, 'left_undistort.jpg', K, dist)
+	img2 = undistort(img2_, 'right_undistort.jpg', K, dist)
+
+
+	# curr_work_dir = os.getcwd()
+	# img_path = curr_work_dir
+	
+	# img1 = img_path + "myleft_undistort.jpg"
+	# img2 = img_path + "myright_undistort.jpg"
 
 	kp1, des1, kp2, des2 = create_feature_points(img1, img2, K, dist)
 	pts1, pts2, F = match_feature_points(kp1, des1, kp2, des2)
@@ -108,40 +117,43 @@ def relative_camera_pose(img1_, img2_, K, dist, undistort_=False):
 
 	# Decompose the essential matrix into R, r
 	R1, R2, t = cv.decomposeEssentialMat(E)
-	#print("\nRotation matrix left to right:\n", R1)
-	#print("\nTranslation vector from right reference frame:\n", t)
 
 	# Re-projected feature points on the first image
 	# http://answers.opencv.org/question/173969/how-to-give-input-parameters-to-triangulatepoints-in-python/
+	print("K:\n", K)
+	print("dist: \n", dist)
+
+	print("R1:\n", R1)
 	print("R2:\n", R2)
 	print("t\n", t)
 
-	R2_t = np.hstack((R2,t))
+	R2_t = np.hstack((R2,(t)))
 	print("R2_t:\n", R2_t)
 	
 
-	I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+	#I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 	zero_vector = np.array([[0,0,0]])
-
 	zero_vector = np.transpose(zero_vector)
-	I_aug = np.hstack((I,zero_vector))
-	print(I_aug)
-
+	#I_aug = np.hstack((I,zero_vector))
+	#print("Augumented I:\n",I_aug)
 
 
 	# Create projection matrices P1 and P2
-	P1 = np.dot(K,I_aug)
+	P1 = np.hstack((K,zero_vector))
 	P2 = np.dot(K,R2_t)
-    
+
 	print("P1:\n", P1)
 	print("P2:\n", P2)
 
-
+	pts1 = pts1.astype(np.float)
+	pts2 = pts2.astype(np.float)
 
 	pts1 = np.transpose(pts1)
 	pts2 = np.transpose(pts2)
 
-	#points4D = cv.triangulatePoints(P1, P2, pts1, pts2)
+	points4D = cv.triangulatePoints(P1, P2, pts1, pts2)
+	aug_points3D = points4D/points4D[3]
+	print("\npoints3D:\n",aug_points3D)
 	
 	# Calculate the depth of the matching points:
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
