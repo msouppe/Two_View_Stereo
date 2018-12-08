@@ -92,18 +92,8 @@ def relative_camera_pose(img1_, img2_, K, dist):
 
 	print("\n\nRelativeCamPose:\n")
 
-	#K = np.array([[883.64406339, 0., 507.1981339 ],[0., 884.98856976, 382.46811708],[0., 0., 1.]])
-	#dist = np.array([3.69641561e-02,  3.48490576e-01, -6.76000221e-04,  1.95258318e-04, -1.13082536e+00])
-
 	img1 = undistort(img1_, 'left_undistort.jpg', K, dist)
 	img2 = undistort(img2_, 'right_undistort.jpg', K, dist)
-
-
-	# curr_work_dir = os.getcwd()
-	# img_path = curr_work_dir
-	
-	# img1 = img_path + "myleft_undistort.jpg"
-	# img2 = img_path + "myright_undistort.jpg"
 
 	kp1, des1, kp2, des2 = create_feature_points(img1, img2, K, dist)
 	pts1, pts2, F = match_feature_points(kp1, des1, kp2, des2)
@@ -130,13 +120,8 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	R2_t = np.hstack((R2,(t)))
 	print("R2_t:\n", R2_t)
 	
-
-	#I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 	zero_vector = np.array([[0,0,0]])
 	zero_vector = np.transpose(zero_vector)
-	#I_aug = np.hstack((I,zero_vector))
-	#print("Augumented I:\n",I_aug)
-
 
 	# Create projection matrices P1 and P2
 	P1 = np.hstack((K,zero_vector))
