@@ -139,6 +139,20 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	points4D = cv.triangulatePoints(P1, P2, pts1, pts2)
 	aug_points3D = points4D/points4D[3]
 	print("\npoints3D:\n",aug_points3D)
+
+	points3D = aug_points3D[:2]
+	print("\n3dPoints:\n", points3D)
+
+
+	cv.imshow('img1', img1)
+
+	# Project points
+	plt.scatter(points3D[0], points3D[1])
+
+	# put a red dot, size 40, at 2 locations:
+	#plt.scatter(x=[30, 40], y=[50, 60], c='r', s=40)
+	plt.savefig("tryProj.png")
+	plt.show()
 	
 	# Calculate the depth of the matching points:
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
