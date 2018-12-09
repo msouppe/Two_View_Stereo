@@ -138,27 +138,60 @@ def relative_camera_pose(img1_, img2_, K, dist):
 
 	points4D = cv.triangulatePoints(P1, P2, pts1, pts2)
 	aug_points3D = points4D/points4D[3]
-	print("\npoints3D:\n",aug_points3D)
+	print("\nAugmented points3D:\n",aug_points3D)
 
-	points3D = aug_points3D[:2]
-	print("\n3dPoints:\n", points3D)
+	min_depth = min(aug_points3D[2])
+	max_depth = max(aug_points3D[2])
+	print("\n\nMin depth:\n", min_depth)
+	print("Max depth:\n\n", max_depth)
+
+	N = (max_depth-min_depth)/20
+	print("N=20:\n", N)
 
 
-	cv.imshow('img1', img1)
+	equispaced_dist = np.linspace(min_depth, max_depth, num=20)
+	print("Equispaced distance:\n", equispaced_dist)
 
-	# Project points
-	plt.scatter(points3D[0], points3D[1])
+	projectPoints = np.dot(P1, aug_points3D)
+	print("projectPoints:\n", projectPoints)
 
-	# put a red dot, size 40, at 2 locations:
-	#plt.scatter(x=[30, 40], y=[50, 60], c='r', s=40)
-	plt.savefig("tryProj.png")
-	plt.show()
+	points2D = projectPoints[:2]
+	print("\n2DPoints:\n", points2D)
 	
 	# Calculate the depth of the matching points:
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
 	# https://stackoverflow.com/questions/22334023/how-to-calculate-3d-object-points-from-2d-image-points-using-stereo-triangulatio/22335825
 	
+	#for i in range(0,20):
+	K_inv = np.linalg.inv(K) 
+	nd_vector = np.array([0,0,-1,equispaced_dist[15]])
 	
+	P1_aug = np.vstack((P1,nd_vector))
+	P2_aug = np.vstack((P2,nd_vector))
 	
+	print("P1_aug:\n",P1_aug)
+	print("P2_aug:\n",P2_aug)
+	
+	P2_inv = np.linalg.inv(P2_aug)  
+	print("P2_inv:\n", P2_inv)
+
+	P1P2_inv = np.dot(P1_aug, P2_inv)
+	print("P1P2_inv:\n",P1P2_inv)
+
+	R =  P1P2_inv[:3,:3]
+	print("R:\n", R)
+	KR = np.dot(K,R)
+	homography = np.dot(KR,K_inv)
+	#print("\nHomography" + str(i) + ":")
+	print("\n\nhomography:\n",homography)
+
+
+	#h,w = img2.shape
+
+	output_warp = cv.warpPerspective(img2, homography, None)
+	cv.imwrite('Warped_output.jpg',output_warp)
+
+
+
 
 	return R1, R2, t
