@@ -162,34 +162,41 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	# http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
 	# https://stackoverflow.com/questions/22334023/how-to-calculate-3d-object-points-from-2d-image-points-using-stereo-triangulatio/22335825
 	
-	#for i in range(0,20):
-	K_inv = np.linalg.inv(K) 
-	nd_vector = np.array([0,0,-1,equispaced_dist[15]])
-	
-	P1_aug = np.vstack((P1,nd_vector))
-	P2_aug = np.vstack((P2,nd_vector))
-	
-	print("P1_aug:\n",P1_aug)
-	print("P2_aug:\n",P2_aug)
-	
-	P2_inv = np.linalg.inv(P2_aug)  
-	print("P2_inv:\n", P2_inv)
+	homography = []
+	output_warp = []
 
-	P1P2_inv = np.dot(P1_aug, P2_inv)
-	print("P1P2_inv:\n",P1P2_inv)
+	for i in range(0,20):
+		nd_vector = np.array([0,0,-1,equispaced_dist[i]])
+		
+		P1_aug = np.vstack((P1,nd_vector))
+		P2_aug = np.vstack((P2,nd_vector))
+		
+		#print("P1_aug:\n",P1_aug)
+		#print("P2_aug:\n",P2_aug)
+		
+		P2_inv = np.linalg.inv(P2_aug)  
+		#print("P2_inv:\n", P2_inv)
 
-	R =  P1P2_inv[:3,:3]
-	print("R:\n", R)
-	KR = np.dot(K,R)
-	homography = np.dot(KR,K_inv)
-	#print("\nHomography" + str(i) + ":")
-	print("\n\nhomography:\n",homography)
+		P1P2_inv = np.dot(P1_aug, P2_inv)
+		#print("P1P2_inv:\n",P1P2_inv)
 
+		R =  P1P2_inv[:3,:3]
+		#print("R:\n", R)
+		#KR = np.dot(K,R)
+		#homography = np.dot(KR,K_inv)
+
+		homography.append(R)
+		#print("\nHomography" + str(i) + ":")
+		print("\n\nhomography" + str(i))
+		print(homography[i])
+		
+		output_warp.append(cv.warpPerspective(img2, homography[i], None))
+		cv.imwrite('Warped_output_' + str(i) + '.jpg', output_warp[i])
 
 	#h,w = img2.shape
 
-	output_warp = cv.warpPerspective(img2, homography, None)
-	cv.imwrite('Warped_output.jpg',output_warp)
+	#output_warp = cv.warpPerspective(img2, homography, None)
+	#cv.imwrite('Warped_output.jpg',output_warp)
 
 
 
