@@ -3,6 +3,7 @@ import cv2 as cv
 import numpy as np
 import glob
 from matplotlib import pyplot as plt
+from PIL import Image 
 
 # Soure https://docs.opencv.org/3.1.0/dc/dbb/tutorial_py_calibration.html
 # 1. Undistort the images using the parameters you found during calibration
@@ -221,22 +222,46 @@ def relative_camera_pose(img1_, img2_, K, dist):
 		#print("P1P2_inv:\n",P1P2_inv)
 
 		R =  P1P2_inv[:3,:3]
-		#print("R:\n", R)
-		#KR = np.dot(K,R)
-		#homography = np.dot(KR,K_inv)
 
 		homography.append(R)
-		#print("\nHomography" + str(i) + ":")
-		print("\n\nhomography" + str(i))
-		print(homography[i])
+		#print("\n\nhomography" + str(i))
+		#print(homography[i])
 		
 		output_warp.append(cv.warpPerspective(img2, homography[i], None))
 		cv.imwrite('Warped_output_' + str(i) + '.jpg', output_warp[i])
 
-	#h,w = img2.shape
 
-	#output_warp = cv.warpPerspective(img2, homography, None)
-	#cv.imwrite('Warped_output.jpg',output_warp)
+	diff = []
+	abs_img = []
+	blur = []
+	ind = []
+	depth_img = []
+
+	blur_2D = []
+
+	for i in range(0,20):
+		diff.append(cv.absdiff(img1, output_warp[i]))
+		cv.imwrite('Absolute_diff_' + str(i) + '.jpg', diff[i])
+
+
+		blur.append(cv.blur(diff[i],(15,15)))
+		cv.imwrite('Block_filter_' + str(i) + '.jpg', blur[i])
+
+		#print("Blur:\n", blur[i])
+
+		blur_2D.append(np.ravel(blur[i])) 
+
+	big_mat = np.array(blur_2D)
+
+	for pixel in range(len(big_mat[0])):
+
+		index = np.argmin(big_mat[:,pixel])
+		depth_img.append(round(255* equispaced_dist[index]/max(equispaced_dist)))
+
+	#reshape_depth_img = depth_img.reshape(img1.shape)
+	img = Image.fromarray(reshape_depth_img)
+	cv.write("depth_image.jpg", reshape_depth_img)
+	#img.show()
 
 
 
