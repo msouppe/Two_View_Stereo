@@ -45,6 +45,9 @@ scene_imgs = glob.glob(scene_path +'*.jpg')
 img1 = scene_path + "left.jpg"
 img2 = scene_path + "right.jpg"
 
+test= cv.imread(img1)
+print("*********test", test.shape)
+
 R1, R2, t = cam.relative_camera_pose(img1, img2, K, dist)
 
 # Epipolar lines on the images

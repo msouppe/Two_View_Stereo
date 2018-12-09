@@ -21,6 +21,7 @@ def camera_calibration():
 
 	for fname in images:
 		img = cv.imread(fname)
+		print("calibration images", img.shape)
 		gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 		
 		# Find the chess board corners

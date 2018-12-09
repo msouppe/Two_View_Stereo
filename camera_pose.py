@@ -16,6 +16,30 @@ def undistort(image, img_name, mtx, dist):
 	print('undistort() complete!')
 	return dst
 
+def undistort2(image, img_name, mtx, dist):
+	img = cv.imread(image, 0)
+
+	h, w = img.shape[:2]
+	print("Image shape:", img.shape[:2])
+	print("Image height:", h)
+	print("Image width:", w)
+
+	newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 0, (w,h))
+	mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+	undistorted_img = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
+	  
+	# crop the image
+	x = y = 0
+	print("ROI", roi)
+	undistorted_img = undistorted_img[y:y+h, x:x+w]
+	print("*************", x,y,h,w)
+
+	cv.imwrite("test.jpg", undistorted_img)
+
+	print('undistort() complete!')
+	return undistorted_img
+
+
 # Source: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_epipolar_geometry/py_epipolar_geometry.html
 # Create “feature points” in each image:
 def create_feature_points(img1, img2, mtx, dist):
@@ -42,7 +66,7 @@ def match_feature_points(kp1, des1, kp2, des2):
 
 	# ratio test as per Lowe's paper
 	for i,(m,n) in enumerate(matches):
-		if m.distance < 0.4*n.distance:
+		if m.distance < 0.6*n.distance:
 			good.append(m)
 			pts2.append(kp2[m.trainIdx].pt)
 			pts1.append(kp1[m.queryIdx].pt)
@@ -117,7 +141,7 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	print("R2:\n", R2)
 	print("t\n", t)
 
-	R2_t = np.hstack((R2,(t)))
+	R2_t = np.hstack((R1,(-t)))
 	print("R2_t:\n", R2_t)
 	
 	zero_vector = np.array([[0,0,0]])
@@ -140,6 +164,22 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	aug_points3D = points4D/points4D[3]
 	print("\nAugmented points3D:\n",aug_points3D)
 
+	projectedPoints = np.dot(P1, aug_points3D)
+
+	projectedPoints = projectedPoints/projectedPoints[2]
+	print("\nNormalized ProjectedPoints:\n", projectedPoints)
+	points2D = projectedPoints[:2]
+	print("\n2D Points:\n", points2D)
+
+	#Re-projection of points
+	plt.imshow(img1, cmap="gray")
+
+	# Project points
+	plt.scatter(points2D[0], points2D[1],c='b', s=40, alpha=0.5)
+	plt.scatter(pts1[0], pts1[1], c='g', s=15, alpha=1)
+	plt.show()
+
+	# Begin part 4
 	min_depth = min(aug_points3D[2])
 	max_depth = max(aug_points3D[2])
 	print("\n\nMin depth:\n", min_depth)
