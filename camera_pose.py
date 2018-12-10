@@ -111,7 +111,7 @@ def draw_image_epipolar_lines(img1, img2, pts1, pts2, F):
 	plt.subplot(121),plt.imshow(img5)
 	plt.subplot(122),plt.imshow(img3)
 	plt.savefig('plot_epilines.png')
-	plt.show()
+	#plt.show()
 
 def relative_camera_pose(img1_, img2_, K, dist):
 
@@ -178,7 +178,7 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	# Project points
 	plt.scatter(points2D[0], points2D[1],c='b', s=40, alpha=0.5)
 	plt.scatter(pts1[0], pts1[1], c='g', s=15, alpha=1)
-	plt.show()
+	#plt.show()
 
 	# Begin part 4
 	min_depth = min(aug_points3D[2])
@@ -256,12 +256,13 @@ def relative_camera_pose(img1_, img2_, K, dist):
 	for pixel in range(len(big_mat[0])):
 
 		index = np.argmin(big_mat[:,pixel])
-		depth_img.append(round(255* equispaced_dist[index]/max(equispaced_dist)))
+		depth_img.append(round(240* equispaced_dist[index]/max(equispaced_dist)))
 
-	#reshape_depth_img = depth_img.reshape(img1.shape)
+	depth_fin = np.array(depth_img)
+	reshape_depth_img = depth_fin.reshape(img1.shape)
 	img = Image.fromarray(reshape_depth_img)
-	cv.write("depth_image.jpg", reshape_depth_img)
-	#img.show()
+	#cv.imwrite("depth_image.jpg", img)
+	img.show()
 
 
 
