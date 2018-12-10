@@ -1,8 +1,8 @@
 # Plane Sweeping 2-View Stereo
 
 ## Prerequisites
-- Python 3 
-- Python packages: cv2, numpy, os, glob
+- Python 3 (version: 3.7.1)
+- Python packages: cv2 (version: 3.4.3), numpy, os, glob
 - MAC OS or Windows 10 (Ubuntu Windows' Bash)
 
 ## Installation 
@@ -21,7 +21,8 @@ python3 main.py
 ## Project Structure
 * `main.py`: Main program
 * `calibration.py`: Calibrates camera using the chessboard images
-* `camera_pose`:
+* `camera_pose.py`: Craw eplipole lines on images, re-projected points on images, and plane-sweeping stereo computations
+* `images`: All images that were used for the project i.e) chessboard images, scene images, warped images, undistorted images
   
 ## Output
 **Part 1**  
