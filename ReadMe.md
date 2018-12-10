@@ -32,6 +32,7 @@ For the images that were taken to calibrate the camera we obtain the following:
 * Reprojection mean square error
   
 **Part 2**    
+None, only needed to take photos of a scene
   
 **Part 3**    
 Computation for finding the camera relative pose:
